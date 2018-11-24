@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mtbatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hoon.mapper.UserMapper">
+	
+	<!-- 로그인할 때 사용자의 정보 조회 -->
+	<select id="login" resultType="UserVO">
+		select uid, upw, uname from tbl_user where uid = #{uid} and upw = #{upw}
+	</select>
+	
+	<!-- 로그인한 사용자의 sessionKey와 sessionLimit를 업데이트 하는 기능 -->
+	<update id="keepLogin">
+		update tbl_user set sessionkey = #{sessionId}, sessionLimit = #{next} where uid = #{uid}
+	</update>
+	
+	<!-- loginCookie에 기록된 값으로 사용자의 정보를 조회하는 기능 -->
+	<select id="checkUserWithSessionKey" resultType="UserVO">
+		select * from tbl_user where sessionKey = #{value}
+		and sessionlimit > now()
+	</select>
+	
+	<!-- 회원 가입 -->
+	<insert id="create">
+		insert into tbl_user (uid, upw, uname, uphone)
+		values(#{uid}, #{upw}, #{uname}, #{uphone})
+	</insert>
+
+</mapper>

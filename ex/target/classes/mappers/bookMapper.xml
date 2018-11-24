@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mtbatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hoon.mapper.BookMapper">
+
+	<!-- 도서 추가 -->
+	<insert id="create">
+		insert into tbl_book (title, author, publisher, pubday, content, price, quantity, writer)
+		values(#{title}, #{author}, #{publisher}, #{pubday}, #{content}, #{price}, #{quantity}, #{writer})
+	</insert>
+	
+	<!-- 도서 정보 가져오기 -->
+	<select id="read" resultType="BookVO">
+		select
+			*
+		from
+			tbl_book
+		where bno = #{bno}
+	</select>
+	
+	<!-- 도서 내용 수정 -->
+	<update id="update">
+		update tbl_book set title=#{title}, author=#{author}, publisher=#{publisher}, pubday=#{pubday}, content=#{content}, price=#{price}, quantity=#{quantity}, regdate=now()
+		where bno = #{bno}
+	</update>
+	
+	<!-- 도서 삭제 -->
+	<delete id="delete">
+		delete from tbl_book where bno = #{bno}
+	</delete>
+	
+	<!-- 도서 목록 -->
+	<select id="listAll" resultType="BookVO">
+		<![CDATA[
+		select
+			*
+		from
+			tbl_book
+		where bno > 0
+		order by regdate desc
+		]]>
+	</select>
+	
+	<!-- 도서 페이징 -->
+	<select id="listPage" resultType="BookVO">
+		<![CDATA[
+		select
+			*
+		from
+			tbl_book
+		where bno > 0
+		order by regdate desc
+		limit #{page}, 10
+		]]>
+	</select>
+	
+	<!-- 검색 조건에 따른 동적 SQL -->
+	<select id="listCriteria" resultType="BookVO">
+		<![CDATA[
+		select
+			bno, title, author, publisher, pubday, content, price, quantity, regdate, replycnt, writer
+		from
+			tbl_book
+		where 
+			bno > 0
+		]]>
+		
+		<include refid="search"></include>
+		
+		<![CDATA[
+		order by regdate desc
+		limit #{pageStart}, #{perPageNum}
+		]]>
+	</select>
+	
+	<!-- totalCount 반환 -->
+	<select id="countPaging" resultType="int">
+		<![CDATA[
+		select
+			count(bno)
+		from
+			tbl_book
+		where 
+			bno > 0
+		]]>
+		
+		<include refid="search"></include>
+	</select>
+	
+	<!-- replycnt 계산 -->
+	<update id="updateReplyCnt">
+		update tbl_book set replycnt =
+			(select count(rno) from tbl_reply where bno = #{bno}) where bno = #{bno} > 0;
+	</update>
+	
+	<!-- 이미지 파일 정보를 저장하는 기능 -->
+	<insert id="addImage">
+		insert into tbl_image(fullname, bno) values (#{fullName}, LAST_INSERT_ID())
+	</insert>
+	
+	<!-- 이미지 파일 가져오는 기능 -->
+	<select id="getImage" resultType="string">
+		select fullname from tbl_image where bno = #{bno} order by regdate
+	</select>
+	
+	<!-- 이미지 파일 수정 -->
+	<insert id="replaceImage">
+		insert into tbl_image(fullname, bno) values (#{fullName}, #{bno})
+	</insert>
+	
+	<!-- 이미지 파일 삭제 -->
+	<delete id="deleteImage">
+		delete from tbl_image where bno = #{bno}
+	</delete>
+	
+	<sql id="search">
+		<if test="searchType != null" >
+			<if test="searchType == 'title'.toString()">
+				and title like CONCAT('%', #{keyword}, '%')
+			</if>
+			<if test="searchType == 'author'.toString()">
+				and author like CONCAT('%', #{keyword}, '%')
+			</if>
+			<if test="searchType == 'publihser'.toString()">
+				and publihser like CONCAT('%', #{keyword}, '%')
+			</if>
+			<if test="searchType == 'writer'.toString()">
+				and writer like CONCAT('%', #{writer}, '%')
+			</if>
+		</if>
+	</sql>
+	
+	
+</mapper>
